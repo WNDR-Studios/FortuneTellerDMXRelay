@@ -19,33 +19,20 @@ running, designing the show, and live-tuning fixture values.
 | `Show.h` | The show sequence table - **edit this to design the show** |
 | `Console.h` / `Console.cpp` | Interactive serial console for live DMX tuning |
 
-## 1. DMX Library Setup (Serial1 on the Mega)
+## 1. DMX Library Setup
 
 This project uses [DMXSerial by Matthias Hertel](https://github.com/mathertel/DMXSerial).
-On an Arduino Mega 2560, DMXSerial defaults to hardware Serial0 (pins 0/1) - but
-this project's shield is wired to **Serial1** (pins 18/19) to avoid conflicts
-with USB programming. The library has a Serial1 mode (`DMX_USE_PORT1`) that is
-disabled by default.
+DMXSerial defaults to Serial0 (pins 0/1), which is exactly where the CQRobot
+shield's TX/RX jumpers connect the MAX485. No library modification or extra
+compile flags are needed.
 
-**Recommended: pass a compile flag, don't edit the library.** The flag
-`-DDMX_USE_PORT1` applies to every compiled file, including the library, so it
-enables Serial1 mode without touching the installed library source:
-
-```sh
-arduino-cli compile --fqbn arduino:avr:mega \
-  --build-property "compiler.cpp.extra_flags=-DDMX_USE_PORT1" .
-```
-
-**Arduino IDE fallback:** if you're not using arduino-cli, open the installed
-copy of `DMXSerial/src/DMXSerial_avr.h` (under your Arduino `libraries` folder)
-and uncomment:
-
-```cpp
-#define DMX_USE_PORT1
-```
+The CQRobot shield's TX/RX jumpers connect the MAX485 to Serial0 (pins 0/1) —
+there is no Serial1 option on this shield. DMXSerial defaults to Serial0, so
+**no extra compile flag is needed**. Leave the shield's TX/RX jumpers bridged
+to the hardware TX/RX positions.
 
 **Verify:** with a DMX tester/sniffer, confirm the DMX signal appears on the
-Mega's pins 18 (TX1)/19 (RX1), not pins 0/1.
+shield's XLR output with the shield's Enable jumper in place.
 
 ## 2. Build & Upload
 
@@ -53,8 +40,7 @@ Mega's pins 18 (TX1)/19 (RX1), not pins 0/1.
 arduino-cli core install arduino:avr
 arduino-cli lib install DMXSerial
 
-arduino-cli compile --fqbn arduino:avr:mega \
-  --build-property "compiler.cpp.extra_flags=-DDMX_USE_PORT1" .
+arduino-cli compile --fqbn arduino:avr:mega .
 
 arduino-cli upload -p <PORT> --fqbn arduino:avr:mega .
 ```
@@ -135,10 +121,12 @@ real fixtures, since units can vary slightly.
 
 ## 5. Console Mode (live DMX tuning)
 
-With `ENABLE_DMX_CONSOLE = true` in `Config.h` (the default), open the Serial
-Monitor at `115200` baud after uploading to send live commands to the fixtures
-through the same `Fixture` API the show uses - handy for working out which
-values look best on your actual units before encoding them in `Show.h`.
+With `ENABLE_DMX_CONSOLE = true` in `Config.h`, the console runs on **Serial2
+(pin 16 = TX2, pin 17 = RX2)**. Serial0 (pins 0/1) is reserved for the DMX
+shield. Connect a USB-to-serial adapter (FTDI, CP2102, CH340, etc.) to TX2/RX2
+and open its COM port at `115200` baud. The Arduino IDE Serial Monitor won't
+work here — use a separate terminal (e.g. PuTTY, the adapter's own COM port in
+Arduino IDE as a second window, etc.).
 
 Sending any command (other than `run`) puts the sketch into **override mode**:
 the trigger state machine is paused and the buffer only changes when you send

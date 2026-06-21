@@ -32,23 +32,26 @@ inline void applyShowStep(Fixture &fx, const ShowStep &s) {
   fx.setLaserRotation(s.laserRotation);
 }
 
-// IMPORTANT: keep ledRotation outside LedRotation::STOP's range (0-9) and keep
-// laserRotation >= 128 (one of LaserRotation::CHASE_*) in every step below, so
-// the lasers never sit in a fixed position during the active sequence.
+// IMPORTANT:
+//   showMode MUST be ShowMode::OFF (0) in every step. Any non-zero value
+//   activates the fixture's internal auto-show, which ignores channels 2-9.
+//   keep ledRotation outside LedRotation::STOP's range (0-9) so the head
+//   keeps moving. LaserRotation values: verify 0-127 vs 128-255 behavior
+//   on real hardware before changing (see Fixture.h channel 9 note).
 const ShowStep showSequence[] = {
-  // showMode,        colorMacro,             ledStrobe,      uv,      uvChase,
-  //   lasers,                  laserStrobe,   ledRotation,           laserRotation,         durationMs
-  { ShowMode::RANDOM,   ColorMacro::JUMP,      Strobe::OFF,    UV::ON,  UVChase::SLOW,
-    Laser::RED_GREEN,        Strobe::SLOW,     LedRotation::CW_SLOW,  LaserRotation::CHASE_SLOW,   1500 },
+  // showMode,       colorMacro,         ledStrobe,       uv,      uvChase,
+  //   lasers,                laserStrobe,    ledRotation,          laserRotation,        durationMs
+  { ShowMode::OFF,  ColorMacro::JUMP,   Strobe::OFF,     UV::ON,  UVChase::SLOW,
+    Laser::RED_GREEN,      Strobe::SLOW,    LedRotation::CW_SLOW,  LaserRotation::CHASE_MEDIUM,  1500 },
 
-  { ShowMode::RANDOM,   ColorMacro::JUMP,      Strobe::MEDIUM, UV::ON,  UVChase::FAST,
-    Laser::RG_FLICKER,       Strobe::MEDIUM,   LedRotation::CCW_SLOW, LaserRotation::CHASE_MEDIUM, 1200 },
+  { ShowMode::OFF,  ColorMacro::JUMP,   Strobe::MEDIUM,  UV::ON,  UVChase::FAST,
+    Laser::RG_FLICKER,     Strobe::MEDIUM,  LedRotation::CCW_SLOW, LaserRotation::CHASE_MEDIUM,  1200 },
 
-  { ShowMode::RANDOM,   ColorMacro::FADE1,     Strobe::FAST,   UV::ON,  UVChase::STROBE_SLOW,
-    Laser::RG_FLICKER_SYNC,  Strobe::FAST,     LedRotation::CW_FAST,  LaserRotation::CHASE_FAST,   1000 },
+  { ShowMode::OFF,  ColorMacro::FADE1,  Strobe::FAST,    UV::ON,  UVChase::STROBE_SLOW,
+    Laser::RG_FLICKER_SYNC, Strobe::FAST,  LedRotation::CW_FAST,  LaserRotation::CHASE_FAST,    1000 },
 
-  { ShowMode::RANDOM,   ColorMacro::JUMP,      Strobe::MEDIUM, UV::ON,  UVChase::FAST,
-    Laser::GR_FLICKER,       Strobe::MEDIUM,   LedRotation::CCW_FAST, LaserRotation::CHASE_MEDIUM, 1200 },
+  { ShowMode::OFF,  ColorMacro::FADE2,  Strobe::MEDIUM,  UV::ON,  UVChase::FAST,
+    Laser::GR_FLICKER,     Strobe::MEDIUM,  LedRotation::CCW_FAST, LaserRotation::CHASE_MEDIUM,  1200 },
 };
 
 constexpr size_t showSequenceLength = sizeof(showSequence) / sizeof(showSequence[0]);

@@ -3,17 +3,24 @@
 // class that maps semantic setters onto DMXSerial's channel buffer.
 //
 // Channel map (1-indexed, relative to the fixture's DMX start address):
-//   1 Show Mode    : 0-9 off, 10-219 fixed shows 1-6, 220-255 random show
+//   1 Show Mode    : 0-9 off (use channels 2-9 directly), 10-44 show1, 45-79 show2,
+//                    80-114 show3, 115-149 show4, 150-184 show5, 185-219 show6,
+//                    220-255 random show.
+//                    WARNING: any non-zero show mode activates the fixture's internal
+//                    auto-show, which overrides and ignores channels 2-9 entirely.
+//                    Keep this at OFF (0) to control the fixture via channels 2-9.
 //   2 Color Macro  : 0-9 off, 10-198 color jump, 199-225 fade 1, 226-255 fade 2
 //   3 LED Strobe   : 0-9 off, 10-244 slow->fast, 245-255 sound-controlled
 //   4 UV Effect    : 0-134 off, 135-255 UV chase on
-//   5 UV Chase     : 0-127 speed slow->fast, 128-255 speed slow->fast + strobing
+//   5 UV Chase     : 0-127 speed slow->fast (no strobe), 128-255 speed slow->fast + strobing
 //   6 Laser Colors : 0-9 off, 10-49 red, 50-89 green, 90-129 red+green,
 //                    130-169 red+green flicker, 170-209 green+red flicker,
 //                    210-249 flicker sync, 250-255 flicker alternate
 //   7 Laser Strobe : same encoding as channel 3
 //   8 LED Rotation : 0-9 stop, 10-127 CW slow->fast, 128-255 CCW slow->fast
-//   9 Laser Rotation/Pattern: 0-127 static pattern, 128-255 moving chase slow->fast
+//   9 Laser Rotation/Pattern: bracket meanings need hardware verification —
+//                    manual suggests 0-127 may be moving chase (slow->fast) and
+//                    128-255 a different mode; verify with console before relying on names.
 //
 // Constants below are mid-range picks within each documented bracket. Tune them
 // against real hardware using the serial console (see Console.h / README.md).
@@ -24,14 +31,14 @@
 #include "Config.h"
 
 namespace ShowMode {     // Channel 1
-  constexpr uint8_t OFF    = 0;
-  constexpr uint8_t SHOW1  = 25;
-  constexpr uint8_t SHOW2  = 60;
-  constexpr uint8_t SHOW3  = 95;
-  constexpr uint8_t SHOW4  = 130;
-  constexpr uint8_t SHOW5  = 165;
-  constexpr uint8_t SHOW6  = 200;
-  constexpr uint8_t RANDOM = 240;  // 220-255
+  constexpr uint8_t OFF    = 0;    // 0-9:   use channels 2-9 directly
+  constexpr uint8_t SHOW1  = 27;   // 10-44
+  constexpr uint8_t SHOW2  = 62;   // 45-79
+  constexpr uint8_t SHOW3  = 97;   // 80-114
+  constexpr uint8_t SHOW4  = 132;  // 115-149
+  constexpr uint8_t SHOW5  = 167;  // 150-184
+  constexpr uint8_t SHOW6  = 202;  // 185-219
+  constexpr uint8_t RANDOM = 237;  // 220-255
 }
 
 namespace ColorMacro {   // Channel 2

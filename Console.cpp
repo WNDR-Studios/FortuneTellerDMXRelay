@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Serial2 (pins 16=TX2, 17=RX2) is used for the console so that Serial0
+// (pins 0/1) remains free for the DMX shield. Connect a USB-to-serial adapter
+// to TX2/RX2 and open its COM port at SERIAL_BAUD to use the console.
+#define CONSOLE_SERIAL Serial2
+
 namespace {
 
 bool overrideActive = false;
@@ -100,31 +105,31 @@ const NamedValue LASER_ROTATION_NAMES[] = {
 };
 
 void printHelp() {
-  Serial.println(F("Commands (lowercase, space-separated):"));
-  Serial.println(F("  c <channel> <value>       raw DMX write (channel 1-16, value 0-255)"));
-  Serial.println(F("  show <name|0-255>         off show1..show6 random"));
-  Serial.println(F("  color <name|0-255>        off jump fade1 fade2"));
-  Serial.println(F("  strobe <name|0-255>       off slow medium fast sound"));
-  Serial.println(F("  uv <name|0-255>           off on"));
-  Serial.println(F("  uvchase <name|0-255>      off slow fast strobeslow strobefast"));
-  Serial.println(F("  laser <name|0-255>        off red green redgreen rgflicker grflicker rgsync rgalt"));
-  Serial.println(F("  laserstrobe <name|0-255>  off slow medium fast sound"));
-  Serial.println(F("  ledrot <name|0-255>       stop cwslow cwfast ccwslow ccwfast"));
-  Serial.println(F("  laserrot <name|0-255>     statica staticb chaseslow chasemedium chasefast"));
-  Serial.println(F("  step <index>              apply showSequence[index]"));
-  Serial.println(F("  blackout                  zero all channels"));
-  Serial.println(F("  dump                      print current channel values"));
-  Serial.println(F("  run                       resume trigger-driven show"));
-  Serial.println(F("  help                      show this message"));
+  CONSOLE_SERIAL.println(F("Commands (lowercase, space-separated):"));
+  CONSOLE_SERIAL.println(F("  c <channel> <value>       raw DMX write (channel 1-16, value 0-255)"));
+  CONSOLE_SERIAL.println(F("  show <name|0-255>         off show1..show6 random"));
+  CONSOLE_SERIAL.println(F("  color <name|0-255>        off jump fade1 fade2"));
+  CONSOLE_SERIAL.println(F("  strobe <name|0-255>       off slow medium fast sound"));
+  CONSOLE_SERIAL.println(F("  uv <name|0-255>           off on"));
+  CONSOLE_SERIAL.println(F("  uvchase <name|0-255>      off slow fast strobeslow strobefast"));
+  CONSOLE_SERIAL.println(F("  laser <name|0-255>        off red green redgreen rgflicker grflicker rgsync rgalt"));
+  CONSOLE_SERIAL.println(F("  laserstrobe <name|0-255>  off slow medium fast sound"));
+  CONSOLE_SERIAL.println(F("  ledrot <name|0-255>       stop cwslow cwfast ccwslow ccwfast"));
+  CONSOLE_SERIAL.println(F("  laserrot <name|0-255>     statica staticb chaseslow chasemedium chasefast"));
+  CONSOLE_SERIAL.println(F("  step <index>              apply showSequence[index]"));
+  CONSOLE_SERIAL.println(F("  blackout                  zero all channels"));
+  CONSOLE_SERIAL.println(F("  dump                      print current channel values"));
+  CONSOLE_SERIAL.println(F("  run                       resume trigger-driven show"));
+  CONSOLE_SERIAL.println(F("  help                      show this message"));
 }
 
 void dumpChannels(Fixture &fx) {
   uint16_t base = fx.baseAddress();
   for (uint8_t i = 0; i < FIXTURE_CHANNEL_COUNT; i++) {
-    Serial.print(F("ch "));
-    Serial.print(base + i);
-    Serial.print(F(": "));
-    Serial.println(DMXSerial.read(base + i));
+    CONSOLE_SERIAL.print(F("ch "));
+    CONSOLE_SERIAL.print(base + i);
+    CONSOLE_SERIAL.print(F(": "));
+    CONSOLE_SERIAL.println(DMXSerial.read(base + i));
   }
 }
 
@@ -139,7 +144,7 @@ void handleLine(char *line, Fixture &fx) {
     printHelp();
   } else if (strcmp(cmd, "run") == 0) {
     overrideActive = false;
-    Serial.println(F("resuming trigger-driven show"));
+    CONSOLE_SERIAL.println(F("resuming trigger-driven show"));
   } else if (strcmp(cmd, "blackout") == 0) {
     fx.blackout();
     overrideActive = true;
@@ -151,7 +156,7 @@ void handleLine(char *line, Fixture &fx) {
       applyShowStep(fx, showSequence[index]);
       overrideActive = true;
     } else {
-      Serial.println(F("step index out of range"));
+      CONSOLE_SERIAL.println(F("step index out of range"));
     }
   } else if (strcmp(cmd, "c") == 0 && arg1 != nullptr && arg2 != nullptr) {
     DMXSerial.write(atoi(arg1), (uint8_t)constrain(atoi(arg2), 0, 255));
@@ -184,7 +189,7 @@ void handleLine(char *line, Fixture &fx) {
     fx.setLaserRotation(resolve(arg1, LASER_ROTATION_NAMES));
     overrideActive = true;
   } else {
-    Serial.println(F("unknown command, type 'help'"));
+    CONSOLE_SERIAL.println(F("unknown command, type 'help'"));
   }
 }
 
@@ -194,8 +199,8 @@ namespace Console {
 
 void begin(Fixture & /*fx*/) {
   if (!ENABLE_DMX_CONSOLE) return;
-  Serial.begin(SERIAL_BAUD);
-  Serial.println(F("FortuneTellerDMXRelay console - type 'help' for commands"));
+  CONSOLE_SERIAL.begin(SERIAL_BAUD);
+  CONSOLE_SERIAL.println(F("FortuneTellerDMXRelay console - type 'help' for commands"));
 }
 
 bool poll(Fixture &fx) {
@@ -204,8 +209,8 @@ bool poll(Fixture &fx) {
   static char buffer[32];
   static size_t length = 0;
 
-  while (Serial.available() > 0) {
-    char c = (char)Serial.read();
+  while (CONSOLE_SERIAL.available() > 0) {
+    char c = (char)CONSOLE_SERIAL.read();
     if (c == '\n' || c == '\r') {
       if (length > 0) {
         buffer[length] = '\0';

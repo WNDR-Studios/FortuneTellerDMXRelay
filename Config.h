@@ -32,7 +32,9 @@ constexpr uint16_t DMX_MAX_CHANNEL = 16;
 constexpr unsigned long BLACKOUT_HOLD_MS = 500;
 
 // ---- Console ----
-// Interactive serial console for live DMX exploration (see Console.h). Set to
-// false for a deployed build to skip Serial setup entirely.
-constexpr bool ENABLE_DMX_CONSOLE = true;
+// Interactive serial console for live DMX exploration (see Console.h). Uses
+// Serial2 (pin 16=TX2, pin 17=RX2) — connect a USB-to-serial adapter there.
+// Serial0 (pins 0/1) is reserved for the DMX shield and must stay free.
+// Set to false for a deployed build with no adapter attached.
+constexpr bool ENABLE_DMX_CONSOLE = false;
 constexpr unsigned long SERIAL_BAUD = 115200;
