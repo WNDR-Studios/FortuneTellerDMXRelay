@@ -4,10 +4,10 @@
 // See README.md for wiring, build instructions, and how to design the show.
 //
 // State machine:
-//   IDLE     - trigger LOW. DMX buffer holds all-zero; DMXSerial keeps refreshing it.
-//   ACTIVE   - trigger HIGH. Steps through showSequence (Show.h), looping for as
-//              long as the trigger stays HIGH.
-//   BLACKOUT - trigger went LOW. Buffer is zeroed immediately and held for
+//   IDLE     - trigger inactive. DMX buffer holds all-zero; DMXSerial keeps refreshing it.
+//   ACTIVE   - trigger active. Steps through showSequence (Show.h), looping for as
+//              long as the trigger stays active.
+//   BLACKOUT - trigger went inactive. Buffer is zeroed immediately and held for
 //              BLACKOUT_HOLD_MS before returning to IDLE.
 #include <DMXSerial.h>
 #include "Config.h"
@@ -24,7 +24,9 @@ unsigned long stepStartMs = 0;
 unsigned long blackoutStartMs = 0;
 
 void setup() {
-  pinMode(TRIGGER_PIN, INPUT);
+  // Relay NO contact connects TRIGGER_PIN to GND when energized.
+  // Internal pull-up holds the pin HIGH at rest; LOW = trigger active.
+  pinMode(TRIGGER_PIN, INPUT_PULLUP);
 
   DMXSerial.init(DMXController, DMX_MODE_PIN);
   DMXSerial.maxChannel(DMX_MAX_CHANNEL);
@@ -38,7 +40,7 @@ void loop() {
     return; // console override active; skip the trigger-driven state machine
   }
 
-  bool triggerActive = digitalRead(TRIGGER_PIN) == HIGH;
+  bool triggerActive = digitalRead(TRIGGER_PIN) == LOW;
   unsigned long now = millis();
 
   switch (state) {

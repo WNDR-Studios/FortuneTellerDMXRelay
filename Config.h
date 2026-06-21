@@ -7,8 +7,8 @@
 #include <Arduino.h>
 
 // ---- Trigger input ----
-// Digital input from the isolation relay. External pull-down resistor holds this LOW
-// when the relay is de-energized. HIGH = run the show, LOW = blackout.
+// Digital input from the isolation relay (INPUT_PULLUP). Internal pull-up holds this
+// HIGH at rest; relay closing pulls it LOW through GND. LOW = run the show, HIGH = blackout.
 constexpr uint8_t TRIGGER_PIN = 3;
 
 // ---- DMX ----

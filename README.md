@@ -196,9 +196,9 @@ For a deployed build where you don't need the console, set
 
 ## 6. Operational Notes / Troubleshooting
 
-- **Trigger wiring**: `TRIGGER_PIN` should read LOW at rest (external
-  pull-down) and HIGH only when the isolation relay is energized. Verify this
-  with a multimeter before connecting DMX fixtures.
+- **Trigger wiring**: `TRIGGER_PIN` uses `INPUT_PULLUP` — it reads HIGH at rest
+  and LOW when the isolation relay energizes (relay NO → D3, relay COM → GND).
+  Verify with a multimeter before connecting DMX fixtures.
 - **No software simulation**: DMX output can only be verified with real
   fixtures or a DMX tester/sniffer - there's no way to simulate this sketch.
 - **DMX addressing**: both Stinger II units must be dip-switched to the DMX
