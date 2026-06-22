@@ -152,8 +152,8 @@ void handleLine(char *line, Fixture &fx) {
     dumpChannels(fx);
   } else if (strcmp(cmd, "step") == 0 && arg1 != nullptr) {
     int index = atoi(arg1);
-    if (index >= 0 && (size_t)index < showSequenceLength) {
-      applyShowStep(fx, showSequence[index]);
+    if (index >= 0 && (size_t)index < activeShowLength) {
+      applyShowStep(fx, activeShow[index]);
       overrideActive = true;
     } else {
       CONSOLE_SERIAL.println(F("step index out of range"));

@@ -6,6 +6,10 @@
 #pragma once
 
 #include "Fixture.h"
+#include "Show.h"
+
+extern const ShowStep* activeShow;
+extern size_t activeShowLength;
 
 namespace Console {
 

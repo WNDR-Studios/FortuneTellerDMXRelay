@@ -31,6 +31,11 @@ constexpr uint16_t DMX_MAX_CHANNEL = 16;
 // fixtures from snapping into a random/auto state when DMX data simply stops.
 constexpr unsigned long BLACKOUT_HOLD_MS = 500;
 
+// Relay contact bounce window. The trigger pin must read the same value for
+// this many milliseconds before the state machine acts on it. Filters out
+// the brief bounce pulse that occurs when the relay energizes.
+constexpr unsigned long TRIGGER_DEBOUNCE_MS = 50;
+
 // ---- Console ----
 // Interactive serial console for live DMX exploration (see Console.h). Uses
 // Serial2 (pin 16=TX2, pin 17=RX2) — connect a USB-to-serial adapter there.

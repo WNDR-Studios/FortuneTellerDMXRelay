@@ -1,14 +1,24 @@
 // Fixture.h
-// Named DMX values for the ADJ Stinger II 9-channel mode, and a thin Fixture
-// class that maps semantic setters onto DMXSerial's channel buffer.
+// Named DMX values for the ADJ Stinger II, and a Fixture class that maps
+// semantic setters onto DMXSerial's channel buffer.
 //
-// Channel map (1-indexed, relative to the fixture's DMX start address):
-//   1 Show Mode    : 0-9 off (use channels 2-9 directly), 10-44 show1, 45-79 show2,
-//                    80-114 show3, 115-149 show4, 150-184 show5, 185-219 show6,
-//                    220-255 random show.
-//                    WARNING: any non-zero show mode activates the fixture's internal
-//                    auto-show, which overrides and ignores channels 2-9 entirely.
-//                    Keep this at OFF (0) to control the fixture via channels 2-9.
+// This project supports two DMX channel modes (set by DIP switches on the fixture):
+//
+//   9-CHANNEL MODE (SEQUENCE_MODE = CUSTOM in Show.h)
+//     Ch 1 = Show Mode — in 9-ch mode this only drives the LED/moonflower color
+//            cycling. It does NOT run the full integrated show. Keep at OFF (0)
+//            and control effects directly via channels 2-9.
+//     Ch 2-9 = individual effect controls (see map below).
+//
+//   2-CHANNEL MODE (SEQUENCE_MODE = BUILTIN_SHOWS in Show.h)
+//     Ch 1 = Show selector — runs the fixture's full integrated built-in show
+//            (LEDs, lasers, rotation, UV all coordinated by the fixture).
+//     Ch 2 = Show speed / sound sense (ShowSpeed:: constants).
+//     Ch 3-9 = unused / ignored by fixture.
+//
+// 9-channel map (1-indexed, relative to the fixture's DMX start address):
+//   1 Show Mode    : 0-9 off, 10-44 show1, 45-79 show2, 80-114 show3,
+//                    115-149 show4, 150-184 show5, 185-219 show6, 220-255 random
 //   2 Color Macro  : 0-9 off, 10-198 color jump, 199-225 fade 1, 226-255 fade 2
 //   3 LED Strobe   : 0-9 off, 10-244 slow->fast, 245-255 sound-controlled
 //   4 UV Effect    : 0-134 off, 135-255 UV chase on
@@ -41,7 +51,17 @@ namespace ShowMode {     // Channel 1
   constexpr uint8_t RANDOM = 237;  // 220-255
 }
 
-namespace ColorMacro {   // Channel 2
+// Channel 2 in 2-CHANNEL DMX mode: show speed / sound sense.
+// (In 9-channel mode channel 2 is ColorMacro below — these are separate uses
+//  of the same physical channel depending on the fixture's DIP switch setting.)
+namespace ShowSpeed {
+  constexpr uint8_t SLOW   = 60;   // 0-247 slow->fast
+  constexpr uint8_t MEDIUM = 120;
+  constexpr uint8_t FAST   = 210;
+  constexpr uint8_t SOUND  = 252;  // 248-255 sound-active
+}
+
+namespace ColorMacro {   // Channel 2 in 9-CHANNEL DMX mode
   constexpr uint8_t OFF   = 0;
   constexpr uint8_t JUMP  = 100;  // 10-198
   constexpr uint8_t FADE1 = 210;  // 199-225
@@ -84,11 +104,13 @@ namespace Laser {         // Channel 6
 // Channel 7 (Laser Strobe) reuses the Strobe:: constants above.
 
 namespace LedRotation {   // Channel 8
-  constexpr uint8_t STOP     = 0;    // 0-9
-  constexpr uint8_t CW_SLOW  = 30;   // 10-127, CW
-  constexpr uint8_t CW_FAST  = 120;
-  constexpr uint8_t CCW_SLOW = 140;  // 128-255, CCW
-  constexpr uint8_t CCW_FAST = 250;
+  constexpr uint8_t STOP      = 0;    // 0-9
+  constexpr uint8_t CW_SLOW   = 30;   // 10-127, CW slow->fast
+  constexpr uint8_t CW_MEDIUM = 65;
+  constexpr uint8_t CW_FAST   = 120;
+  constexpr uint8_t CCW_SLOW  = 140;  // 128-255, CCW slow->fast
+  constexpr uint8_t CCW_MEDIUM = 185;
+  constexpr uint8_t CCW_FAST  = 250;
 }
 
 namespace LaserRotation { // Channel 9

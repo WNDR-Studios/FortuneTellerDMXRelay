@@ -23,10 +23,39 @@ size_t stepIndex = 0;
 unsigned long stepStartMs = 0;
 unsigned long blackoutStartMs = 0;
 
+const ShowStep* activeShow = allShows[0];
+size_t activeShowLength = allShowLengths[0];
+
+// Shuffle pool — tracks which shows haven't been played yet this cycle.
+// poolIndex starts at NUM_SHOWS so the first pick triggers a fresh shuffle.
+uint8_t showPool[NUM_SHOWS];
+uint8_t poolIndex = NUM_SHOWS;
+
+void shufflePool() {
+  for (uint8_t i = 0; i < NUM_SHOWS; i++) showPool[i] = i;
+  for (uint8_t i = NUM_SHOWS - 1; i > 0; i--) {
+    uint8_t j = (uint8_t)random(i + 1);
+    uint8_t tmp = showPool[i];
+    showPool[i] = showPool[j];
+    showPool[j] = tmp;
+  }
+  poolIndex = 0;
+}
+
+uint8_t pickNextShow() {
+  if (poolIndex >= NUM_SHOWS) shufflePool();
+  return showPool[poolIndex++];
+}
+
+bool lastRawTrigger = false;
+bool debouncedTrigger = false;
+unsigned long triggerLastChangeMs = 0;
+
 void setup() {
   // Relay NO contact connects TRIGGER_PIN to GND when energized.
   // Internal pull-up holds the pin HIGH at rest; LOW = trigger active.
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  randomSeed(analogRead(A0));
 
   DMXSerial.init(DMXController, DMX_MODE_PIN);
   DMXSerial.maxChannel(DMX_MAX_CHANNEL);
@@ -40,15 +69,26 @@ void loop() {
     return; // console override active; skip the trigger-driven state machine
   }
 
-  bool triggerActive = digitalRead(TRIGGER_PIN) == LOW;
   unsigned long now = millis();
+  bool rawTrigger = (digitalRead(TRIGGER_PIN) == LOW);
+  if (rawTrigger != lastRawTrigger) {
+    lastRawTrigger = rawTrigger;
+    triggerLastChangeMs = now;
+  }
+  if ((now - triggerLastChangeMs) >= TRIGGER_DEBOUNCE_MS) {
+    debouncedTrigger = rawTrigger;
+  }
+  bool triggerActive = debouncedTrigger;
 
   switch (state) {
     case State::IDLE:
       if (triggerActive) {
+        uint8_t pick = pickNextShow();
+        activeShow = allShows[pick];
+        activeShowLength = allShowLengths[pick];
         stepIndex = 0;
         stepStartMs = now;
-        applyShowStep(fixture, showSequence[stepIndex]);
+        applyShowStep(fixture, activeShow[stepIndex]);
         state = State::ACTIVE;
       }
       break;
@@ -60,10 +100,10 @@ void loop() {
         state = State::BLACKOUT;
         break;
       }
-      if (now - stepStartMs >= showSequence[stepIndex].durationMs) {
-        stepIndex = (stepIndex + 1) % showSequenceLength; // loop while triggered
+      if (now - stepStartMs >= activeShow[stepIndex].durationMs) {
+        stepIndex = (stepIndex + 1) % activeShowLength;
         stepStartMs = now;
-        applyShowStep(fixture, showSequence[stepIndex]);
+        applyShowStep(fixture, activeShow[stepIndex]);
       }
       break;
 

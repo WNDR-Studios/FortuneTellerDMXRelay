@@ -67,7 +67,26 @@ DMXSerial's controller mode transmits the buffer continuously via interrupts
 once `DMXSerial.init(DMXController, ...)` is called - the sketch's only job is
 to keep that buffer updated, never to start/stop the DMX stream itself.
 
-## 4. Designing the Show (`Show.h`)
+## 4. Switching Modes
+
+`Show.h` supports two modes, selected by `SEQUENCE_MODE`:
+
+| Mode | `SEQUENCE_MODE` | Fixture DIP switches |
+|------|----------------|----------------------|
+| Built-in shows | `SequenceMode::BUILTIN_SHOWS` | **2-channel DMX mode** |
+| Custom sequence | `SequenceMode::CUSTOM` | **9-channel DMX mode** |
+
+To switch:
+1. Change `SEQUENCE_MODE` in `Show.h`
+2. Re-DIP both Stinger II fixtures to the matching DMX channel mode (see fixture manual p.13)
+3. Recompile and upload
+
+**Why different DIP settings?** In 2-channel mode, channel 1 runs the fixture's
+full integrated built-in show (LEDs, lasers, rotation, UV all coordinated by the
+fixture). In 9-channel mode, channel 1 only drives the LED/moonflower color
+cycling — the full show experience is not available.
+
+## 5. Designing the Show (`Show.h`)
 
 `Show.h` contains `showSequence[]`, an array of `ShowStep` entries. Each step
 sets all 9 Stinger II channels and holds them for `durationMs` before moving to
